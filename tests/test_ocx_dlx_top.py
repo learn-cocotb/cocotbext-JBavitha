@@ -234,6 +234,7 @@ async def check_dlx_tx_output(dut: cocotb.SimHandle, flit_data: int, header: int
 
     # Check header values (assuming they are sent on the first cycle)
     for i in range(8):
+        pass
         # ... (Compare lane_header with the expected header value for this lane) ...
 
 
