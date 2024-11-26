@@ -42,11 +42,6 @@ jobs:
     - name: Check if the documentation builds correctly
       run: pdm run duty check-docs
 
-    - name: Run isort to check or fix imports
-      run: |
-        # Fix imports:
-        isort src/cocotb_vip_templates/bus.py
-
     - name: Check the code quality
       run: pdm run duty check-quality
 
