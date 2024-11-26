@@ -1,14 +1,19 @@
+"""
+Testbench for the ocx_dlx_top module.
+
+This module contains cocotb-based tests for verifying the functionality 
+of the ocx_dlx_top design.
+"""
+
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer, FallingEdge, ClockCycles
 import random
 
 @cocotb.test()
-async def dlx_test(dut):
+async def dlx_test(dut: cocotb.SimHandle) -> None:    
     """Comprehensive testbench for ocx_dlx_top module."""
-
     cocotb.log.info("Starting DLX testbench")
-
     # Clock generation (156.25 MHz)
     clock = Clock(dut.clk_156_25MHz, 10, units="ns")  
     cocotb.start_soon(clock.start())
