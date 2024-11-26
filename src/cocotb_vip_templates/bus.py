@@ -1,4 +1,11 @@
+"""
+This module defines the Bus class to abstract and interact with signals in the ocx_dlx_top module.
+It provides methods to map, manage, and control RX and TX signals and lanes, as well as handling resets
+and clock cycles in the DUT.
+"""
+
 from typing import Dict
+
 import cocotb
 from cocotb.triggers import RisingEdge, Timer
 from cocotb_bus.bus import Bus as BusBaseClass
