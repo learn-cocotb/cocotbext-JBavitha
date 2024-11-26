@@ -10,17 +10,17 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 @cocotb.test()
-async def dlx_test(dut: cocotb.SimHandle) -> None:    
+async def dlx_test(dut: cocotb.SimHandle) -> None:
     """Comprehensive testbench for ocx_dlx_top module."""
     cocotb.log.info("Starting DLX testbench")
     
     # Clock generation (156.25 MHz)
-    clock = Clock(dut.clk_156_25MHz, 10, units="ns")  
+    clock = Clock(dut.clk_156_25MHz, 10, units="ns")
     cocotb.start_soon(clock.start())
 
     # Reset sequence (refer to ocx_dlx_xlx_if for accurate timing)
     dut.hb_gtwiz_reset_all_in.value = 1
-    dut.send_first.value = 0 
+    dut.send_first.value = 0
     await RisingEdge(dut.clk_156_25MHz)
     await Timer(100, units="ns")  # Hold reset for a short duration
 
@@ -122,7 +122,6 @@ async def run_flow_control_test(dut: cocotb.SimHandle) -> None:
 
 async def run_crc_error_test(dut, num_flits):
     """Inject CRC errors and verify detection."""
-
     for _ in range(num_flits):
         flit_data = random.randint(0, (2**512) - 1)
         await send_tlx_flit(dut, flit_data, 0)
@@ -143,7 +142,6 @@ async def run_crc_error_test(dut, num_flits):
 
 async def run_lane_error_test(dut):
     """Simulate lane errors (e.g., lane down)."""
-
     # Bring down lane 0
     dut.ln0_rx_valid.value = 0
     await Timer(100, units="ns")
@@ -166,7 +164,6 @@ async def run_lane_error_test(dut):
 
 async def run_nack_retransmission_test(dut):
     """Test NACK and flit retransmission."""
-
     flit_data = random.randint(0, (2**512) - 1)
     await send_tlx_flit(dut, flit_data, 0)
 
@@ -181,7 +178,6 @@ async def run_nack_retransmission_test(dut):
 
 async def run_random_stress_test(dut, num_flits):
     """Send random data with random errors."""
-
     for _ in range(num_flits):
         flit_data = random.randint(0, (2**512) - 1)
         header = random.randint(0, 3)
