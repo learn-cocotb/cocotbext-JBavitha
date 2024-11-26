@@ -2,7 +2,6 @@
 import cocotb
 from cocotb.triggers import Timer, RisingEdge
 from cocotb_bus.bus import Bus as BusBaseClass
-isort src/cocotb_vip_templates/bus.py
 
 class Bus:
     """Bus class to abstract and interact with signals in the ocx_dlx_top module."""
