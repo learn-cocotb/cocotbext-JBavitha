@@ -1,7 +1,6 @@
 """Bus."""
 import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import Timer, RisingEdge, FallingEdge
+from cocotb.triggers import Timer, RisingEdge
 from cocotb_bus.bus import Bus as BusBaseClass
 
 
