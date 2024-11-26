@@ -8,6 +8,8 @@ import secrets
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
+
+
 @cocotb.test()
 async def dlx_test(dut: cocotb.SimHandle) -> None:
     """Comprehensive testbench for ocx_dlx_top module."""
