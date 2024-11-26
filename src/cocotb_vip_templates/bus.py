@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict
 import cocotb
 from cocotb.triggers import RisingEdge, Timer
 from cocotb_bus.bus import Bus as BusBaseClass
