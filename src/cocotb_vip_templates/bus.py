@@ -1,4 +1,4 @@
-"""Bus."""
+from typing import Dict, Any
 import cocotb
 from cocotb.triggers import RisingEdge, Timer
 from cocotb_bus.bus import Bus as BusBaseClass
@@ -39,11 +39,11 @@ class Bus:
         self.active_high_reset = active_high_reset
         self.uppercase = uppercase
 
-        # Initialize signal groups
-        self.rx_signals = {}
-        self.tx_signals = {}
-        self.rx_lanes = {}
-        self.tx_lanes = {}
+        # Initialize signal groups with type annotations
+        self.rx_signals: Dict[str, cocotb.regression.SimHandle] = {}
+        self.tx_signals: Dict[str, cocotb.regression.SimHandle] = {}
+        self.rx_lanes: Dict[str, Dict[str, cocotb.regression.SimHandle]] = {}
+        self.tx_lanes: Dict[str, Dict[str, cocotb.regression.SimHandle]] = {}
 
         # Automatically map signals
         self.map_rx_signals()
