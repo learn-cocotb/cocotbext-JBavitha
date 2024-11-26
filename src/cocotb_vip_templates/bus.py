@@ -1,7 +1,8 @@
 """Bus."""
 import cocotb
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.triggers import RisingEdge, Timer
 from cocotb_bus.bus import Bus as BusBaseClass
+
 
 class Bus:
     """Bus class to abstract and interact with signals in the ocx_dlx_top module."""
@@ -123,4 +124,3 @@ class Bus:
         rx_flit_valid = self.rx_signals["flit_valid"].value
         tx_flit_valid = self.tx_signals["flit_valid"].value
         cocotb.log.info(f"Coverage: RX flit valid = {rx_flit_valid}, TX flit valid = {tx_flit_valid}")
-
