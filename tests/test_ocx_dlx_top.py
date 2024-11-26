@@ -3,10 +3,11 @@ This module contains cocotb-based tests for verifying the functionality
 of the ocx_dlx_top design.
 """
 
+import random
+
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer, ClockCycles
-import random
+from cocotb.triggers import ClockCycles, RisingEdge, Timer
 
 @cocotb.test()
 async def dlx_test(dut: cocotb.SimHandle) -> None:    
