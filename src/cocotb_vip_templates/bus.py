@@ -1,8 +1,7 @@
 """Bus."""
 import cocotb
-from cocotb.triggers import Timer, RisingEdge
 from cocotb_bus.bus import Bus as BusBaseClass
-
+from cocotb.triggers import Timer, RisingEdge
 
 class Bus:
     """Bus class to abstract and interact with signals in the ocx_dlx_top module."""
@@ -70,7 +69,7 @@ class Bus:
             "debug_info": self.dut.tlx_dlx_debug_info,
         }
 
-    def map_rx_lanes(self):
+    def map_rx_lanes(self) -> None:
         """Map RX lanes dynamically."""
         for i in range(8):  # Assuming 8 RX lanes (ln0 to ln7)
             self.rx_lanes[f"lane{i}"] = {
@@ -80,7 +79,7 @@ class Bus:
                 "slip": getattr(self.dut, f"ln{i}_rx_slip"),
             }
 
-    def map_tx_lanes(self):
+    def map_tx_lanes(self) -> None:
         """Map TX lanes dynamically."""
         for i in range(8):  # Assuming 8 TX lanes (l0 to l7)
             self.tx_lanes[f"lane{i}"] = {
@@ -89,20 +88,20 @@ class Bus:
                 "seq": getattr(self.dut, f"dlx_l{i}_tx_seq"),
             }
 
-    async def reset_dut(self, duration: int = 10):
+    async def reset_dut(self, duration: int = 10) -> None:
         """Toggle the reset signal for the specified duration."""
         cocotb.log.info(f"Resetting DUT for {duration} ns...")
-        self.reset <= 1 if self.active_high_reset else 0
+        self.reset = 1 if self.active_high_reset else 0
         await Timer(duration, units="ns")
-        self.reset <= 0 if self.active_high_reset else 1
+        self.reset = 0 if self.active_high_reset else 1
         cocotb.log.info("Reset complete.")
 
-    async def wait_for_clock_cycles(self, cycles: int):
+    async def wait_for_clock_cycles(self, cycles: int) -> None:
         """Wait for a specified number of clock cycles."""
         for _ in range(cycles):
             await RisingEdge(self.clk)
 
-    async def wait_for_link_up(self):
+    async def wait_for_link_up(self) -> None:
         """Wait until the link is established."""
         cocotb.log.info("Waiting for the link to come up...")
         while not self.rx_signals["link_up"].value:
@@ -118,7 +117,7 @@ class Bus:
         cocotb.log.info(f"Special handling for parameter: {params}")
         return BusBaseClass()
 
-    def record_coverage(self):
+    def record_coverage(self) -> None:
         """Record functional coverage."""
         # Example: Add coverage points for RX and TX flits
         rx_flit_valid = self.rx_signals["flit_valid"].value
