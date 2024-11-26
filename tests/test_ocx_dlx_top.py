@@ -3,7 +3,6 @@
 This module contains cocotb-based tests for verifying the functionality
 of the ocx_dlx_top design.
 """
-import random
 import secrets
 
 import cocotb
@@ -234,9 +233,8 @@ async def check_dlx_tx_output(dut: cocotb.SimHandle, flit_data: int, header: int
 
     # Check header values (assuming they are sent on the first cycle)
     for i in range(8):
-        pass
-        # ... (Compare lane_header with the expected header value for this lane) ...
-
+        lane_header = getattr(dut, f"dlx_l{i}_tx_header").value.integer
+        assert lane_header == expected_header_value[i], f"Header mismatch on lane {i}"
 
 async def send_dlx_flit(dut: cocotb.SimHandle, flit_data: int, header: int) -> None:
     """Send a flit to the DLX RX interface (loopback)."""
