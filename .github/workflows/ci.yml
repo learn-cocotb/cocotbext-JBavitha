@@ -42,9 +42,6 @@ jobs:
     - name: Check if the documentation builds correctly
       run: pdm run duty check-docs
 
-    - name: Run isort to fix or check import ordering
-      run: isort --check-only src/cocotb_vip_templates/bus.py
-
     - name: Check the code quality
       run: pdm run duty check-quality
 
@@ -56,6 +53,9 @@ jobs:
 
     - name: Check for breaking changes in the API
       run: pdm run duty check-api
+
+    - name: Install dependencies
+      run: pip install ruff isort
 
   tests:
 
@@ -88,3 +88,5 @@ jobs:
 
     - name: Run the test suite
       run: sudo apt install -y iverilog && pdm run make -C tests
+
+    
