@@ -1,13 +1,11 @@
-"""
-Testbench for the ocx_dlx_top module.
-
+"""Testbench for the ocx_dlx_top module.
 This module contains cocotb-based tests for verifying the functionality 
 of the ocx_dlx_top design.
 """
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer, FallingEdge, ClockCycles
+from cocotb.triggers import RisingEdge, Timer, ClockCycles
 import random
 
 @cocotb.test()
