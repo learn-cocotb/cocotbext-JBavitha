@@ -38,7 +38,7 @@ async def dlx_test(dut: cocotb.SimHandle) -> None:
 
     dut.send_first.value = 1
     await RisingEdge(dut.clk_156_25MHz)
-    dut.hb_gtwiz_reset_all_in.value = 0 
+    dut.hb_gtwiz_reset_all_in.value = 0
     await RisingEdge(dut.clk_156_25MHz)
 
 
@@ -185,7 +185,7 @@ async def run_random_stress_test(dut: cocotb.SimHandle, num_flits: int) -> None:
 
         # Introduce random errors (CRC, lane errors, NACK)
         if secrets.randbelow(10) < 1:  # 10% chance of error
-            error_type = random.choice(["crc", "lane", "nack"])
+            error_type = secrets.choice(["crc", "lane", "nack"])
             if error_type == "crc":
                 # Corrupt data on a random lane
                 lane_num = secrets.randbelow(8)  # Cryptographically secure random number for lane selection
@@ -193,7 +193,7 @@ async def run_random_stress_test(dut: cocotb.SimHandle, num_flits: int) -> None:
                 setattr(dut, f"ln{lane_num}_rx_data", corrupted_data)
             elif error_type == "lane":
                 # Bring down a random lane
-                lane_num = random.randint(0, 7)
+                lane_num = secrets.randbelow(8)  # Generates a secure random number between 0 and 7
                 getattr(dut, f"ln{lane_num}_rx_valid").value = 0
             elif error_type == "nack":
                 # Force a NACK
@@ -214,7 +214,7 @@ async def send_tlx_flit(dut: cocotb.SimHandle, flit_data: int, header: int) -> N
     await RisingEdge(dut.clk_156_25MHz)
     dut.tlx_dlx_flit_valid.value = 0
 
-async def check_dlx_tx_output(dut, flit_data, header):
+async def check_dlx_tx_output(dut: cocotb.SimHandle, flit_data: int, header: int) -> None:
     """Check the DLX TX output for the sent flit."""
     # This function needs to be adapted based on the serialization scheme
     # in the ocx_dlx_txdf module. Here's a basic example:
@@ -225,7 +225,6 @@ async def check_dlx_tx_output(dut, flit_data, header):
     expected_data = []
     for i in range(8):  # 8 lanes
         start_bit = i * 64
-        end_bit = start_bit + 64
         expected_data.append(flit_data >> start_bit & 0xFFFFFFFFFFFFFFFF)
 
     # Compare expected data with the output of each lane
@@ -235,11 +234,10 @@ async def check_dlx_tx_output(dut, flit_data, header):
 
     # Check header values (assuming they are sent on the first cycle)
     for i in range(8):
-        lane_header = getattr(dut, f"dlx_l{i}_tx_header").value.integer
         # ... (Compare lane_header with the expected header value for this lane) ...
 
 
-async def send_dlx_flit(dut, flit_data, header):
+async def send_dlx_flit(dut: cocotb.SimHandle, flit_data: int, header: int) -> None:
     """Send a flit to the DLX RX interface (loopback)."""
     # This function needs to serialize the data and header across the lanes
     # according to the deserialization scheme in ocx_dlx_rxdf.
@@ -248,7 +246,6 @@ async def send_dlx_flit(dut, flit_data, header):
     data_chunks = []
     for i in range(8):
         start_bit = i * 64
-        end_bit = start_bit + 64
         data_chunks.append(flit_data >> start_bit & 0xFFFFFFFFFFFFFFFF)
 
     # Drive the lane data and header signals
@@ -264,7 +261,7 @@ async def send_dlx_flit(dut, flit_data, header):
         getattr(dut, f"ln{i}_rx_valid").value = 0
 
 
-async def check_tlx_rx_output(dut, flit_data, header):
+async def check_tlx_rx_output(dut: cocotb.SimHandle, flit_data: int, header: int) -> None:
     """Check the TLX interface for the received flit."""
     await RisingEdge(dut.dlx_tlx_flit_valid)
     received_data = int(dut.dlx_tlx_flit.value)
