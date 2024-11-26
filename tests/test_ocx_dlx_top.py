@@ -1,18 +1,20 @@
 """Testbench for the ocx_dlx_top module.
-This module contains cocotb-based tests for verifying the functionality 
+
+This module contains cocotb-based tests for verifying the functionality
 of the ocx_dlx_top design.
 """
 
-import random
+
+import secrets
 
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
-
 @cocotb.test()
 async def dlx_test(dut: cocotb.SimHandle) -> None:    
     """Comprehensive testbench for ocx_dlx_top module."""
     cocotb.log.info("Starting DLX testbench")
+    
     # Clock generation (156.25 MHz)
     clock = Clock(dut.clk_156_25MHz, 10, units="ns")  
     cocotb.start_soon(clock.start())
@@ -80,12 +82,11 @@ async def dlx_test(dut: cocotb.SimHandle) -> None:
 # Helper Functions for Test Cases
 # ------------------------------------------------------------
 
-async def run_data_transfer_test(dut, num_flits):
+async def run_data_transfer_test(dut: cocotb.SimHandle, num_flits: int) -> None:
     """Test basic data transfer from TLX to DLX and back."""
-
     for _ in range(num_flits):
-        flit_data = random.randint(0, (2**512) - 1)
-        header = random.randint(0, 3)
+        flit_data = secrets.randint(0, (2**512) - 1)
+        header = secrets.randint(0, 3)
 
         # TLX to DLX
         await send_tlx_flit(dut, flit_data, header)
@@ -96,9 +97,8 @@ async def run_data_transfer_test(dut, num_flits):
         await check_tlx_rx_output(dut, flit_data, header)
 
 
-async def run_flow_control_test(dut):
+async def run_flow_control_test(dut: cocotb.SimHandle) -> None:
     """Test credit-based flow control."""
-
     # Send flits faster than the receiver can handle
     for _ in range(10):
         flit_data = random.randint(0, (2**512) - 1)
