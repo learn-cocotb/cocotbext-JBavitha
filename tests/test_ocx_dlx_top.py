@@ -232,6 +232,7 @@ async def check_dlx_tx_output(dut: cocotb.SimHandle, flit_data: int, header: int
         assert lane_data == expected_data[i], f"Data mismatch on lane {i}"
 
     # Check header values (assuming they are sent on the first cycle)
+    expected_header_value = [0] * 8  # Replace with actual expected values if known
     for i in range(8):
         lane_header = getattr(dut, f"dlx_l{i}_tx_header").value.integer
         assert lane_header == expected_header_value[i], f"Header mismatch on lane {i}"
