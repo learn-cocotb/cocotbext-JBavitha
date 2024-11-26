@@ -18,8 +18,7 @@ class Bus:
         active_high_reset: bool = True,
         uppercase: bool = False,
     ):
-        """
-        Constructor for Bus class.
+        """Constructor for Bus class.
 
         Args:
             dut (SimHandle): DUT top-level handle.
@@ -52,7 +51,7 @@ class Bus:
         self.map_rx_lanes()
         self.map_tx_lanes()
 
-    def map_rx_signals(self):
+    def map_rx_signals(self) -> None:
         """Map RX interface signals."""
         self.rx_signals = {
             "flit_valid": self.dut.dlx_tlx_flit_valid,
@@ -62,7 +61,7 @@ class Bus:
             "config_info": self.dut.dlx_config_info,
         }
 
-    def map_tx_signals(self):
+    def map_tx_signals(self) -> None:
         """Map TX interface signals."""
         self.tx_signals = {
             "flit_valid": self.dut.tlx_dlx_flit_valid,
