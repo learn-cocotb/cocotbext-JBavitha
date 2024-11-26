@@ -3,8 +3,7 @@
 This module contains cocotb-based tests for verifying the functionality
 of the ocx_dlx_top design.
 """
-
-
+import random
 import secrets
 
 import cocotb
@@ -85,8 +84,8 @@ async def dlx_test(dut: cocotb.SimHandle) -> None:
 async def run_data_transfer_test(dut: cocotb.SimHandle, num_flits: int) -> None:
     """Test basic data transfer from TLX to DLX and back."""
     for _ in range(num_flits):
-        flit_data = secrets.randint(0, (2**512) - 1)
-        header = secrets.randint(0, 3)
+        flit_data = secrets.randbelow(2**512)  # Generates a value between 0 and 2^512-1
+        header = secrets.randbelow(4)  # Generates a value between 0 and 3
 
         # TLX to DLX
         await send_tlx_flit(dut, flit_data, header)
@@ -101,7 +100,7 @@ async def run_flow_control_test(dut: cocotb.SimHandle) -> None:
     """Test credit-based flow control."""
     # Send flits faster than the receiver can handle
     for _ in range(10):
-        flit_data = random.randint(0, (2**512) - 1)
+        flit_data = secrets.randbelow(2**512)
         await send_tlx_flit(dut, flit_data, 0)
         await ClockCycles(dut.clk_156_25MHz, 1) 
 
