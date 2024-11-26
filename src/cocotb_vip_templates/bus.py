@@ -1,115 +1,129 @@
+"""Bus."""
 import cocotb
+from cocotb.clock import Clock
+from cocotb.triggers import Timer, RisingEdge, FallingEdge
 from cocotb_bus.bus import Bus as BusBaseClass
 
-class Bus(BusBaseClass):  
-    """Bus class for ocx_dlx_top module."""
+
+class Bus:
+    """Bus class to abstract and interact with signals in the ocx_dlx_top module."""
 
     def __init__(
         self,
-        dut: cocotb.handle, 
+        dut: cocotb.SimHandle,
         prefix: str = "",
         suffix: str = "",
-        bus_seperator: str = "_",
-        clk: str = "clk_156_25MHz",  
-        reset: str = "hb_gtwiz_reset_all_in", 
-        active_high_reset: bool = True, 
+        bus_separator: str = "_",
+        clk: str = "clk",
+        reset: str = "rst_n",
+        active_high_reset: bool = True,
         uppercase: bool = False,
     ):
-        """Constructor for the DLX bus.
+        """
+        Constructor for Bus class.
 
         Args:
-            dut (cocotb.handle): Handle to the DUT (ocx_dlx_top)
-            prefix (str): Prefix for signal names (if any)
-            suffix (str): Suffix for signal names (if any)
-            bus_seperator (str): Separator for bus signal names (e.g., '_')
-            clk (str): Name of the clock signal
-            reset (str): Name of the reset signal
-            active_high_reset (bool): True if reset is active high
-            uppercase (bool): True if signal names are uppercase in the DUT
+            dut (SimHandle): DUT top-level handle.
+            prefix (str): Prefix for signal names.
+            suffix (str): Suffix for signal names.
+            bus_separator (str): Separator between prefix/suffix and signal names.
+            clk (str): Name of the clock signal.
+            reset (str): Name of the reset signal.
+            active_high_reset (bool): Whether the reset is active high.
+            uppercase (bool): Whether signal names are uppercase.
         """
-
         self.dut = dut
+        self.prefix = prefix
+        self.suffix = suffix
+        self.bus_separator = bus_separator
+        self.clk = getattr(dut, clk)
+        self.reset = getattr(dut, reset)
+        self.active_high_reset = active_high_reset
+        self.uppercase = uppercase
 
-        # Create a list to store all signal names
-        all_signals = [
-            # --- TLX to DLX interface ---
-            "tlx_dlx_flit_valid", "tlx_dlx_flit", "tlx_dlx_debug_encode", "tlx_dlx_debug_info",
+        # Initialize signal groups
+        self.rx_signals = {}
+        self.tx_signals = {}
+        self.rx_lanes = {}
+        self.tx_lanes = {}
 
-            # --- DLX to TLX interface ---
-            "dlx_tlx_flit_valid", "dlx_tlx_flit", "dlx_tlx_flit_crc_err", 
-            "dlx_tlx_link_up", "dlx_config_info", "ro_dlx_version", "dlx_tlx_init_flit_depth", "dlx_tlx_flit_credit",
+        # Automatically map signals
+        self.map_rx_signals()
+        self.map_tx_signals()
+        self.map_rx_lanes()
+        self.map_tx_lanes()
 
-            # --- DLX lane interfaces ---
-            "ln0_rx_valid", "ln0_rx_header", "ln0_rx_data", "ln0_rx_slip",
-            "ln1_rx_valid", "ln1_rx_header", "ln1_rx_data", "ln1_rx_slip",
-            "ln2_rx_valid", "ln2_rx_header", "ln2_rx_data", "ln2_rx_slip",
-            "ln3_rx_valid", "ln3_rx_header", "ln3_rx_data", "ln3_rx_slip",
-            "ln4_rx_valid", "ln4_rx_header", "ln4_rx_data", "ln4_rx_slip",
-            "ln5_rx_valid", "ln5_rx_header", "ln5_rx_data", "ln5_rx_slip",
-            "ln6_rx_valid", "ln6_rx_header", "ln6_rx_data", "ln6_rx_slip",
-            "ln7_rx_valid", "ln7_rx_header", "ln7_rx_data", "ln7_rx_slip",
+    def map_rx_signals(self):
+        """Map RX interface signals."""
+        self.rx_signals = {
+            "flit_valid": self.dut.dlx_tlx_flit_valid,
+            "flit": self.dut.dlx_tlx_flit,
+            "crc_err": self.dut.dlx_tlx_flit_crc_err,
+            "link_up": self.dut.dlx_tlx_link_up,
+            "config_info": self.dut.dlx_config_info,
+        }
 
-            "dlx_l0_tx_data", "dlx_l0_tx_header", "dlx_l0_tx_seq",
-            "dlx_l1_tx_data", "dlx_l1_tx_header", "dlx_l1_tx_seq",
-            "dlx_l2_tx_data", "dlx_l2_tx_header", "dlx_l2_tx_seq",
-            "dlx_l3_tx_data", "dlx_l3_tx_header", "dlx_l3_tx_seq",
-            "dlx_l4_tx_data", "dlx_l4_tx_header", "dlx_l4_tx_seq",
-            "dlx_l5_tx_data", "dlx_l5_tx_header", "dlx_l5_tx_seq",
-            "dlx_l6_tx_data", "dlx_l6_tx_header", "dlx_l6_tx_seq",
-            "dlx_l7_tx_data", "dlx_l7_tx_header", "dlx_l7_tx_seq",
+    def map_tx_signals(self):
+        """Map TX interface signals."""
+        self.tx_signals = {
+            "flit_valid": self.dut.tlx_dlx_flit_valid,
+            "flit": self.dut.tlx_dlx_flit,
+            "debug_encode": self.dut.tlx_dlx_debug_encode,
+            "debug_info": self.dut.tlx_dlx_debug_info,
+        }
 
-            # --- Xilinx PHY interface --- 
-            "gtwiz_reset_all_out", "gtwiz_reset_rx_datapath_out", "gtwiz_reset_tx_done_in",
-            "gtwiz_reset_rx_done_in", "gtwiz_buffbypass_tx_done_in", "gtwiz_buffbypass_rx_done_in",
-            "gtwiz_userclk_tx_active_in", "gtwiz_userclk_rx_active_in", "send_first",
+    def map_rx_lanes(self):
+        """Map RX lanes dynamically."""
+        for i in range(8):  # Assuming 8 RX lanes (ln0 to ln7)
+            self.rx_lanes[f"lane{i}"] = {
+                "valid": getattr(self.dut, f"ln{i}_rx_valid"),
+                "header": getattr(self.dut, f"ln{i}_rx_header"),
+                "data": getattr(self.dut, f"ln{i}_rx_data"),
+                "slip": getattr(self.dut, f"ln{i}_rx_slip"),
+            }
 
-            # --- Internal signals (might need some for specific tests) ---
-            "rx_tx_crc_error", "rx_tx_retrain", "rx_tx_nack", 
-            "rx_tx_tx_ack_rtn", "rx_tx_rx_ack_inc", "rx_tx_tx_ack_ptr_vld", "rx_tx_tx_ack_ptr", 
-            "rx_tx_tx_lane_swap", "rx_tx_deskew_done", "rx_tx_linkup", 
-            # ... (Add other internal signals if necessary) ...
-        ]
+    def map_tx_lanes(self):
+        """Map TX lanes dynamically."""
+        for i in range(8):  # Assuming 8 TX lanes (l0 to l7)
+            self.tx_lanes[f"lane{i}"] = {
+                "data": getattr(self.dut, f"dlx_l{i}_tx_data"),
+                "header": getattr(self.dut, f"dlx_l{i}_tx_header"),
+                "seq": getattr(self.dut, f"dlx_l{i}_tx_seq"),
+            }
 
-        # Call the superclass constructor to initialize the bus
-        super().__init__(
-            entity=dut,
-            name="dlx_bus",
-            signals=all_signals,
-            optional_signals=[], 
-            clock=getattr(dut, clk),  
-            reset=getattr(dut, reset),  
-            reset_active_level=not active_high_reset,
-        )
+    async def reset_dut(self, duration: int = 10):
+        """Toggle the reset signal for the specified duration."""
+        cocotb.log.info(f"Resetting DUT for {duration} ns...")
+        self.reset <= 1 if self.active_high_reset else 0
+        await Timer(duration, units="ns")
+        self.reset <= 0 if self.active_high_reset else 1
+        cocotb.log.info("Reset complete.")
 
-    # ------------------------------------------------------------
-    # Helper functions (example implementations)
-    # ------------------------------------------------------------
+    async def wait_for_clock_cycles(self, cycles: int):
+        """Wait for a specified number of clock cycles."""
+        for _ in range(cycles):
+            await RisingEdge(self.clk)
 
-    async def drive_tlx_flit(self, flit_data, header=0):
-        """Drive a flit from the TLX interface to the DLX."""
-        self.tlx_dlx_flit_valid.value = 1
-        self.tlx_dlx_flit.value = flit_data
-        await RisingEdge(self.dut.clk_156_25MHz)
-        self.tlx_dlx_flit_valid.value = 0
+    async def wait_for_link_up(self):
+        """Wait until the link is established."""
+        cocotb.log.info("Waiting for the link to come up...")
+        while not self.rx_signals["link_up"].value:
+            await RisingEdge(self.clk)
+        cocotb.log.info("Link is up.")
 
-    async def monitor_dlx_tx(self, expected_flit_data, expected_header):
-        """Monitor the DLX TX interface for the expected flit."""
-        # This needs to be adapted based on the serialization in ocx_dlx_txdf
-        await ClockCycles(self.dut.clk_156_25MHz, 4)  # Wait for serialization
+    def get_bus(self) -> BusBaseClass:
+        """Creates and returns a generic bus object."""
+        return BusBaseClass()
 
-        # ... (Implement data and header checking logic - refer to previous example) ...
+    def get_somespecialfunction_bus(self, params: int) -> BusBaseClass:
+        """Handles special signal naming conventions and returns the bus."""
+        cocotb.log.info(f"Special handling for parameter: {params}")
+        return BusBaseClass()
 
-    async def drive_dlx_rx(self, flit_data, header=0):
-        """Drive a flit onto the DLX RX interface (loopback)."""
-        # ... (Implement serialization logic based on ocx_dlx_rxdf) ...
+    def record_coverage(self):
+        """Record functional coverage."""
+        # Example: Add coverage points for RX and TX flits
+        rx_flit_valid = self.rx_signals["flit_valid"].value
+        tx_flit_valid = self.tx_signals["flit_valid"].value
+        cocotb.log.info(f"Coverage: RX flit valid = {rx_flit_valid}, TX flit valid = {tx_flit_valid}")
 
-        # ... (Drive lane data and header signals - refer to previous example) ...
-
-    async def monitor_tlx_rx(self):
-        """Monitor the TLX interface to receive a flit from DLX."""
-        await RisingEdge(self.dlx_tlx_flit_valid)
-        received_data = int(self.dlx_tlx_flit.value)
-        # ... (Capture header and CRC error status if needed) ...
-        return received_data
-
-    # ... (Add more helper functions for control/status, error injection, etc.) ...
