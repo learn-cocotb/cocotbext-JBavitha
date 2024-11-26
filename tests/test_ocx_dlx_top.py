@@ -105,7 +105,7 @@ async def run_flow_control_test(dut: cocotb.SimHandle) -> None:
         await ClockCycles(dut.clk_156_25MHz, 1) 
 
     # Monitor dlx_tlx_flit_credit to ensure it goes low (no credits)
-    await Timer(100, units="ns") 
+    await Timer(100, units="ns")
     assert dut.dlx_tlx_flit_credit.value == 0, "Flow control not working (credit not 0)"
 
     # Wait for credits to become available again
@@ -115,15 +115,15 @@ async def run_flow_control_test(dut: cocotb.SimHandle) -> None:
 
     # Send more flits to check if data is transferred correctly after backpressure
     for _ in range(5):
-        flit_data = random.randint(0, (2**512) - 1)
+        flit_data = secrets.randbelow(2**512)  # Cryptographically secure random number
         await send_tlx_flit(dut, flit_data, 0)
         await check_dlx_tx_output(dut, flit_data, 0)  # Check TX output
 
 
-async def run_crc_error_test(dut, num_flits):
+async def run_crc_error_test(dut: cocotb.SimHandle, num_flits: int) -> None:
     """Inject CRC errors and verify detection."""
     for _ in range(num_flits):
-        flit_data = random.randint(0, (2**512) - 1)
+        flit_data = secrets.randbelow(2**512)  # Cryptographically secure random number
         await send_tlx_flit(dut, flit_data, 0)
 
         # Corrupt data on lane 0 (example) - flip a few bits
@@ -140,14 +140,14 @@ async def run_crc_error_test(dut, num_flits):
         # ... (Add checks for error handling and recovery) ...
 
 
-async def run_lane_error_test(dut):
+async def run_lane_error_test(dut: cocotb.SimHandle) -> None:
     """Simulate lane errors (e.g., lane down)."""
     # Bring down lane 0
     dut.ln0_rx_valid.value = 0
     await Timer(100, units="ns")
 
     # Send a flit and check if it's still received (other lanes should compensate)
-    flit_data = random.randint(0, (2**512) - 1)
+    flit_data = secrets.randbelow(2**512)  # Cryptographically secure random number
     await send_tlx_flit(dut, flit_data, 0)
     await check_dlx_tx_output(dut, flit_data, 0)  # Check TX output
 
@@ -164,11 +164,11 @@ async def run_lane_error_test(dut):
 
 async def run_nack_retransmission_test(dut):
     """Test NACK and flit retransmission."""
-    flit_data = random.randint(0, (2**512) - 1)
+    flit_data = secrets.randbelow(2**512)  # Cryptographically secure random number
     await send_tlx_flit(dut, flit_data, 0)
 
     # Force a NACK by manipulating ACK signals (example)
-    dut.rx_tx_nack.value = 1 
+    dut.rx_tx_nack.value = 1
     await RisingEdge(dut.clk_156_25MHz)
     dut.rx_tx_nack.value = 0
 
@@ -176,7 +176,7 @@ async def run_nack_retransmission_test(dut):
     await check_dlx_tx_output(dut, flit_data, 0)  # Assuming loopback
 
 
-async def run_random_stress_test(dut, num_flits):
+async def run_random_stress_test(dut: cocotb.SimHandle, num_flits: int) -> None:
     """Send random data with random errors."""
     for _ in range(num_flits):
         flit_data = random.randint(0, (2**512) - 1)
